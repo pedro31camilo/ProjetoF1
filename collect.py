@@ -1,8 +1,18 @@
 # %%
+import argparse
+import random
+import string
+import os
 import fastf1
 import pandas as pd
 import time
 pd.set_option('display.max_columns', None)
+
+random_user = ''.join(random.choices(string.ascii_lowercase, k=8)) + "@email.com"
+random_pass = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+
+os.environ['F1_USERNAME'] = random_user
+os.environ['F1_PASSWORD'] = random_pass
 # %%
 class Collect:
 
@@ -42,7 +52,13 @@ class Collect:
             self.process_year_modes(year)
             time.sleep(10)
 # %%
-collect = Collect([2023, 2024, 2025], ['R', 'S'])
-# %%
-collect.process_years()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--years', '-y', nargs='+', type=int)
+    parser.add_argument('--modes', '-m', nargs='+', type=str, default=['R', 'S'])
+
+    args = parser.parse_args()
+
+    collect = Collect(args.years, args.modes)
+    collect.process_years()
 # %%
