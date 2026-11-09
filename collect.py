@@ -14,6 +14,9 @@ random_pass = ''.join(random.choices(string.ascii_letters + string.digits, k=10)
 os.environ['F1_USERNAME'] = random_user
 os.environ['F1_PASSWORD'] = random_pass
 # %%
+df = pd.read_parquet('data/2019_01_R.parquet')
+df
+# %%
 class Collect:
 
     def __init__(self, year=[2021, 2022, 2023], modes=['R', 'S']):
@@ -28,17 +31,26 @@ class Collect:
             return pd.DataFrame()
         session._load_drivers_results()
         df = session.results
-        df['Mode'] = mode
+        df['Mode'] = session.name
+        df['Year'] = session.date.year
+        df['Date'] = session.date
+        df['RoundNumber'] = session.event['RoundNumber']
+        df['OfficialEventName'] = session.event['OfficialEventName']
+        df['EventName'] = session.event['EventName']
+        df['Country'] = session.event['Country']
+        df['Location'] = session.event['Location']
         return df
 
-    def save_data(self, df, year, gp, mode):
-        df.to_parquet(f'data/{year}_{gp:02d}_{mode}.parquet', index=False)
+    def save_data(self, df:pd.DataFrame, year:int, gp:int, mode:str):
+        filename = f'data/{year}_{gp:02d}_{mode}.parquet'
+        df.to_parquet(filename, index=False)
 
     def process(self, year, gp, mode):
         df = self.get_data(year, gp, mode)
         if df.empty:
             return False
         self.save_data(df, year, gp, mode)
+        time.sleep(2)
         return True
 
     def process_year_modes(self, year):
@@ -49,16 +61,23 @@ class Collect:
 
     def process_years(self):
         for year in self.year:
+            print(f'Coletando dados do ano {year}')
             self.process_year_modes(year)
             time.sleep(10)
 # %%
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--start', type=int)
+    parser.add_argument('--stop', type=int)
     parser.add_argument('--years', '-y', nargs='+', type=int)
     parser.add_argument('--modes', '-m', nargs='+', type=str, default=['R', 'S'])
 
     args = parser.parse_args()
 
-    collect = Collect(args.years, args.modes)
+    if args.years:
+        collect = Collect(args.years, args.modes)
+    elif args.start and args.stop:
+        years = list(range(args.start, args.stop + 1))
+        collect = Collect(years, args.modes)
     collect.process_years()
 # %%
