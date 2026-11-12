@@ -14,9 +14,6 @@ random_pass = ''.join(random.choices(string.ascii_letters + string.digits, k=10)
 os.environ['F1_USERNAME'] = random_user
 os.environ['F1_PASSWORD'] = random_pass
 # %%
-df = pd.read_parquet('data/2019_01_R.parquet')
-df
-# %%
 class Collect:
 
     def __init__(self, year=[2021, 2022, 2023], modes=['R', 'S']):
